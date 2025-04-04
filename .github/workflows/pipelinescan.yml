@@ -1,79 +1,79 @@
 name: Veracode Pipeline Scan  🛠️
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # Permite a execução manual do workflow pelo GitHub Actions
   push:
-    branches: [ master ]
+    branches: [ master ] # Executa o workflow quando há um push na branch master
   pull_request:
-    branches: [ master ]
+    branches: [ master ] # Executa o workflow em pull requests direcionados à branch master
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Define que o job rodará em um ambiente Linux mais recente
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4 # Faz o checkout do código-fonte no repositório
 
       - name: Zip Project
-        run: zip -r project.zip .
+        run: zip -r project.zip . # Compacta o projeto em um arquivo ZIP
         env:
-          build-name: project.zip
+          build-name: project.zip # Define o nome do arquivo ZIP
 
       - name: Archive package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4 # Salva o ZIP como um artefato
         with:
-          name: CodePackage
-          path: project.zip
-
-      - name: Upload & Scan
-        uses: veracode/veracode-uploadandscan-action@0.2.6
-        with:
-          appname: 'cloudgoad'
-          filepath: 'project.zip'
-          vid: "${{ secrets.VERACODE_API_ID }}"
-          vkey: "${{ secrets.VERACODE_API_KEY }}"
+          name: CodePackage # Nome do artefato salvo
+          path: project.zip # Caminho do arquivo ZIP
 
   pipeline-scan:
-    needs: build
-    runs-on: ubuntu-latest
+    needs: build # Garante que o job 'build' seja concluído antes de executar este
+    runs-on: ubuntu-latest # Executa o job em um ambiente Linux
     container:
-      image: veracode/pipeline-scan:latest
-      options: --user root
+      image: veracode/pipeline-scan:latest # Utiliza a imagem oficial do Veracode Pipeline Scan
+      options: --user root # Executa o container com permissões de root
 
     steps:
       - name: Retrieve artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4 # Baixa o ZIP gerado no job 'build'
         with:
-          name: CodePackage
+          name: CodePackage # Nome do artefato que foi salvo anteriormente
 
       - name: Pipeline Scan
+
+        # Executa o Veracode Pipeline Scan
+        # Autenticação via API ID
+        # Autenticação via API Key
+        # Falha se houver vulnerabilidades de alto risco
+        # Arquivo que será analisado
+        # ID da aplicação na Veracode
+        # Gera um relatório em formato JSON
         run: |
           java -jar /opt/veracode/pipeline-scan.jar \
-          --veracode_api_id="${{ secrets.VERACODE_API_ID }}" \
-          --veracode_api_key="${{ secrets.VERACODE_API_KEY }}" \
-          --fail_on_severity="Very High, High" \
-          --file="project.zip" \
-          --app_id="${{ secrets.VERACODE_APP_ID }}" \
-          --json_output_file="results.json"
-        continue-on-error: true
+          --veracode_api_id="${{ secrets.VERACODE_API_ID }}" \ 
+          --veracode_api_key="${{ secrets.VERACODE_API_KEY }}" \ 
+          --fail_on_severity="Very High, High" \ 
+          --file="project.zip" \ 
+          --app_id="${{ secrets.VERACODE_APP_ID }}" \ 
+          --json_output_file="results.json" 
+        continue-on-error: true # Permite que o job continue mesmo se houver falhas
 
       - name: Upload Scan Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4 # Salva o relatório JSON como um artefato
         with:
-          name: ScanResults
-          path: results.json
+          name: ScanResults # Nome do artefato gerado
+          path: results.json # Caminho do arquivo JSON gerado pelo scan
 
   results_to_sarif:
-    needs: pipeline-scan
-    runs-on: ubuntu-latest
+    needs: pipeline-scan # Só executa se o job 'pipeline-scan' for concluído
+    runs-on: ubuntu-latest # Executa o job em um ambiente Linux
     steps:
       - name: Get scan results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4 # Baixa os resultados do scan
         with:
-          name: ScanResults
+          name: ScanResults # Nome do artefato gerado pelo scan
 
       - name: Convert pipeline scan output to SARIF format
         id: convert
-        uses: Veracode/veracode-pipeline-scan-results-to-sarif@v1.0.7
+        uses: Veracode/veracode-pipeline-scan-results-to-sarif@v1.0.7 # Converte o JSON em formato SARIF
         with:
-          pipeline-results-json: results.json
-          output-results-sarif: results.sarif
+          pipeline-results-json: results.json # Arquivo de entrada
+          output-results-sarif: results.sarif # Arquivo de saída em formato SARIF
