@@ -1,4 +1,4 @@
-name: Veracode Policy Scan
+name: Veracode Policy Scan  ✅
 
 on:
   workflow_dispatch:
