@@ -1,31 +1,34 @@
 name: Veracode Policy Scan  ✅
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Permite execução manual do workflow no GitHub Actions
 
 jobs:
   policy-scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Define o ambiente do runner como Ubuntu mais recente
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # Faz o checkout do repositório para obter os arquivos do código-fonte
 
       - name: Zip Project
-        run: zip -r project.zip . 
+        run: zip -r project.zip .  # Compacta todo o projeto em um único arquivo ZIP para envio ao Veracode
 
       - name: Debugging
+       # Exibe o ID da API para depuração
+       # Confirma o caminho do arquivo ZIP
+       # Lista os arquivos do diretório para verificar se o ZIP foi criado corretamente
         run: |
-          echo "App Name: ${{ secrets.VERACODE_API_ID }}"
-          echo "File Path: project.zip"
-          ls -l 
+          echo "App Name: ${{ secrets.VERACODE_API_ID }}"  
+          echo "File Path: project.zip" 
+          ls -l  
 
       - name: Run Veracode Policy Scan
-        uses: veracode/veracode-uploadandscan-action@0.2.6
+        uses: veracode/veracode-uploadandscan-action@0.2.6  # Usa a ação oficial da Veracode para enviar e escanear
         with:
-          appname: 'cloudgoad'  # Confirme o nome correto do app no Veracode
-          filepath: 'project.zip'
-          vid: "${{ secrets.VERACODE_API_ID }}"
-          vkey: "${{ secrets.VERACODE_API_KEY }}"
-          scantimeout: 15
-          createprofile: true  # Garante que o perfil do app seja criado
+          appname: 'cloudgoad'  # Nome do aplicativo registrado no Veracode (verifique se está correto)
+          filepath: 'project.zip'  # Caminho do arquivo compactado a ser enviado
+          vid: "${{ secrets.VERACODE_API_ID }}"  # ID da API armazenado como secret no repositório
+          vkey: "${{ secrets.VERACODE_API_KEY }}"  # Chave da API armazenada como secret no repositório
+          scantimeout: 15  # Define um tempo limite para a execução do escaneamento
+          createprofile: true  # Garante que o perfil do aplicativo seja criado caso ainda não exista
