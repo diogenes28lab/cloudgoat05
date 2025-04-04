@@ -15,9 +15,9 @@ jobs:
         run: zip -r project.zip .  # Compacta todo o projeto em um único arquivo ZIP para envio ao Veracode
 
       - name: Debugging
-       # Exibe o ID da API para depuração
-       # Confirma o caminho do arquivo ZIP
-       # Lista os arquivos do diretório para verificar se o ZIP foi criado corretamente
+        # Exibe o ID da API para depuração
+        # Confirma o caminho do arquivo ZIP
+        # Lista os arquivos do diretório para verificar se o ZIP foi criado corretamente
         run: |
           echo "App Name: ${{ secrets.VERACODE_API_ID }}"  
           echo "File Path: project.zip" 
@@ -26,9 +26,15 @@ jobs:
       - name: Run Veracode Policy Scan
         uses: veracode/veracode-uploadandscan-action@0.2.6  # Usa a ação oficial da Veracode para enviar e escanear
         with:
-          appname: 'cloudgoad'  # Nome do aplicativo registrado no Veracode (verifique se está correto)
+          appname: 'cloudgoad05'  # Nome do aplicativo registrado no Veracode (verifique se está correto)
           filepath: 'project.zip'  # Caminho do arquivo compactado a ser enviado
           vid: "${{ secrets.VERACODE_API_ID }}"  # ID da API armazenado como secret no repositório
           vkey: "${{ secrets.VERACODE_API_KEY }}"  # Chave da API armazenada como secret no repositório
-          scantimeout: 15  # Define um tempo limite para a execução do escaneamento
+          scantimeout: 60  # Increase scan timeout to 60 minutes
           createprofile: true  # Garante que o perfil do aplicativo seja criado caso ainda não exista
+
+      - name: List Directory for Debugging
+        run: ls -l  # Lists the current directory contents for additional debugging
+
+      - name: Verify File Path
+        run: file project.zip  # Verifies the file type of the ZIP to ensure it's created correctly
